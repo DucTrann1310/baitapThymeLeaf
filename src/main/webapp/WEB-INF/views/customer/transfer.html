@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Deposit customer</title>
+  <th:block th:replace="layout/head :: head"/>
+</head>
+<body>
+<div class="container">
+  <header>
+    <nav class="navbar bg-body-tertiary">
+      <div class="container-fluid">
+        <a class="navbar-brand">Transfer money information</a>
+        <div class="d-flex" style="gap: 10px;">
+          <a href="/customers">
+            <button class="btn btn-outline-light" type="button">
+              <i class="fas fa-list-ul"></i>
+              Customers list
+            </button>
+          </a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="content">
+    <form th:object="${transfer}" method="post">
+      <div class="row mb-3 mt-3">
+        <div class="col-lg-3">
+          <label for="id" class="form-label">Sender ID</label>
+          <input type="text" class="form-control bg-secondary" id="id" th:field="*{sender.id}" aria-label="Disabled input example" readonly>
+        </div>
+        <div class="col-lg-3">
+          <label for="senderName" class="form-label">Sender Name</label>
+          <input type="text" class="form-control bg-secondary" id="senderName" th:field="*{sender.fullName}" aria-label="Disabled input example" readonly>
+        </div>
+        <div class="col-lg-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control bg-secondary" id="email" th:field="*{sender.email}" aria-label="Disabled input example" readonly>
+        </div>
+        <div class="col-lg-3">
+          <label for="balance" class="form-label">Sender balance</label>
+          <input type="number" class="form-control bg-secondary" id="balance" th:field="*{sender.balance}" aria-label="Disabled input example" readonly>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-lg-3">
+          <label for="balance" class="form-label">Reciptent Name</label>
+          <select class="form-control" name="reciptent.id">
+            <th:block th:each="item : ${reciptent}">
+              <option th:text="${item.fullName}" th:value="${item.id}" th:selected="${item.id == receipted}" ></option>
+            </th:block>
+          </select>
+        </div>
+        <div class="col-lg-3">
+          <label for="transferAmount" class="form-label">Transfer Amount ($)</label>
+          <input type="number" class="form-control" id="transferAmount" th:field="*{transferAmount}" onchange="calculateTransactionAmount()">
+        </div>
+        <div class="col-lg-3">
+          <label for="fee" class="form-label">Fee (%)</label>
+          <input type="number" class="form-control bg-secondary" id="fee" aria-label="Disabled input example" th:field="*{fee}" readonly>
+        </div>
+        <div class="col-lg-3">
+          <label for="transactionAmount" class="form-label">Total amount of transaction ($)</label>
+          <input type="number" class="form-control bg-secondary" id="transactionAmount" aria-label="Disabled input example" th:field="*{transactionAmount}" readonly>
+        </div>
+      </div>
+
+      <div class="row pt-3">
+        <div class="col-lg-3">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-exchange-alt"></i>
+              Transfer
+            </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<th:block th:if="${success == true}">
+  <footer class="container-fluid success">
+    <div class="container">
+      <div class="notification">
+        <p class="success" th:text="${message}"></p>
+      </div>
+    </div>
+  </footer>
+</th:block>
+
+<th:block th:if="${success == false}">
+  <footer class="container-fluid error">
+    <div class="container">
+      <div class="notification">
+        <p class="error" th:text="${message}"></p>
+      </div>
+    </div>
+  </footer>
+</th:block>
+
+<script>
+  function calculateTransactionAmount() {
+    var transferAmount = parseFloat(document.getElementById("transferAmount").value);
+    var fee = parseFloat(document.getElementById("fee").value);
+
+    var transactionAmount = transferAmount * ((fee/100) + 1);
+
+    document.getElementById("transactionAmount").value = transactionAmount;
+  }
+</script>
+</body>
+</html>
