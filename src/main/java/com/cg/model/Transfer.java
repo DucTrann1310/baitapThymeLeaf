@@ -7,14 +7,14 @@ public class Transfer {
     private Long id;
     private LocalDateTime createAt;
     private Boolean deleted;
-    private Integer fee;
+    private Long fee;
     private BigDecimal feeAmount;
     private BigDecimal transactionAmount;
     private BigDecimal transferAmount;
     private Customer sender;
     private Customer reciptent;
 
-    public Transfer(Long id, LocalDateTime createAt, Boolean deleted, Integer fee, BigDecimal feeAmount, BigDecimal transactionAmount, BigDecimal transferAmount, Customer sender, Customer reciptent) {
+    public Transfer(Long id, LocalDateTime createAt, Boolean deleted, Long fee, BigDecimal feeAmount, BigDecimal transactionAmount, BigDecimal transferAmount, Customer sender, Customer reciptent) {
         this.id = id;
         this.createAt = createAt;
         this.deleted = deleted;
@@ -29,7 +29,7 @@ public class Transfer {
     public Transfer() {
     }
 
-    public Transfer(Customer sender, Integer fee) {
+    public Transfer(Customer sender, Long fee) {
         this.sender = sender;
         this.fee = fee;
     }
@@ -58,11 +58,11 @@ public class Transfer {
         this.deleted = deleted;
     }
 
-    public Integer getFee() {
+    public Long getFee() {
         return fee;
     }
 
-    public void setFee(Integer fee) {
+    public void setFee(Long fee) {
         this.fee = fee;
     }
 

@@ -9,9 +9,9 @@ import com.cg.service.customer.ICustomerService;
 import com.cg.service.deposit.DepositServiceImpl;
 import com.cg.service.deposit.IDepositService;
 import com.cg.service.transfer.ITransferService;
-import com.cg.service.transfer.TransferService;
+import com.cg.service.transfer.TransferServiceImpl;
 import com.cg.service.withdraw.IWithdrawService;
-import com.cg.service.withdraw.WithdrawService;
+import com.cg.service.withdraw.WithdrawServiceImpl;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +26,8 @@ public class CustomerController {
 
     private ICustomerService customerService = new CustomerServiceImpl();
     private IDepositService depositService = new DepositServiceImpl();
-    private IWithdrawService withdrawService = new WithdrawService();
-    private ITransferService transferService = new TransferService();
+    private IWithdrawService withdrawService = new WithdrawServiceImpl();
+    private ITransferService transferService = new TransferServiceImpl();
 
     @GetMapping
     public String showListPage(Model model) {
@@ -68,7 +68,7 @@ public class CustomerController {
     @GetMapping("transfer/{id}")
     public String transfer(@PathVariable long id,Model model){
 
-        model.addAttribute("transfer", new Transfer(customerService.findById(id),10));
+        model.addAttribute("transfer", new Transfer(customerService.findById(id),10L));
         model.addAttribute("reciptent", customerService.findReciptent(customerService.findById(id)));
         return "/customer/transfer";
     }
@@ -79,6 +79,13 @@ public class CustomerController {
         model.addAttribute("customer",customerService.findById(id));
 
         return "/customer/delete";
+    }
+
+    @GetMapping("/transfer_histories")
+    public String transferHistories(Model model){
+        model.addAttribute("transfers", transferService.findAll());
+
+        return "/customer/transferHistories";
     }
 
     @PostMapping("/create")
@@ -101,7 +108,7 @@ public class CustomerController {
 
 
     @PostMapping("/edit/{id}")
-    public String update(@ModelAttribute Customer customer, Model model){
+    public String update(@PathVariable Long id, @ModelAttribute Customer customer, Model model){
         customerService.update(customer.getId(),customer);
 
         model.addAttribute("success", true);
@@ -113,21 +120,29 @@ public class CustomerController {
 
 
     @PostMapping("/deposit/{id}")
-    public String deposit(@ModelAttribute Deposit deposit, Model model){
+    public String deposit(@PathVariable long id, @ModelAttribute Deposit deposit, Model model){
 
-        deposit.setCustomer(customerService.findById(deposit.getCustomer().getId()));
-        depositService.create(deposit);
-        customerService.updateBalanceFromDeposit(deposit.getCustomer(),deposit.getTransaction());
+        if(deposit.getTransaction() != null && deposit.getTransaction().compareTo(BigDecimal.ZERO) >= 0){
+            deposit.setCustomer(customerService.findById(id));
+            depositService.create(deposit);
+            customerService.updateBalanceFromDeposit(deposit.getCustomer(),deposit.getTransaction());
 
-        model.addAttribute("success",true);
-        model.addAttribute("message","Successful deposit transaction");
+            model.addAttribute("success",true);
+            model.addAttribute("message","Successful deposit transaction");
+        }else
+            if (deposit.getTransaction() == null || deposit.getTransaction().compareTo(BigDecimal.ZERO) <= 0){
 
+            model.addAttribute("success",false);
+            model.addAttribute("message", "Unsuccessful deposit transaction");
+        }
+
+        model.addAttribute("deposit", new Deposit(customerService.findById(deposit.getCustomer().getId())));
         return "/customer/deposit";
     }
 
 
     @PostMapping("/withdraw/{id}")
-    public String withdraw(@ModelAttribute Withdraw withdraw, Model model) {
+    public String withdraw(@PathVariable long id, @ModelAttribute Withdraw withdraw, Model model) {
 
         withdraw.setCustomer(customerService.findById(withdraw.getCustomer().getId()));
 
@@ -137,19 +152,21 @@ public class CustomerController {
 
             model.addAttribute("success",true);
             model.addAttribute("message", "Withdrawed Successfully");
-        }else if(withdraw.getTransaction().compareTo(withdraw.getCustomer().getBalance()) > 1) {
+        }else
+            if(withdraw.getTransaction().compareTo(withdraw.getCustomer().getBalance()) == 1
+                || withdraw.getTransaction().compareTo(BigDecimal.ZERO) <= 0
+                || withdraw.getTransaction() == null) {
             model.addAttribute("success",false);
             model.addAttribute("message","Withdrawed Unsuccessfully");
         }
-
-
+        model.addAttribute("withdraw", new Withdraw(customerService.findById(withdraw.getCustomer().getId())));
         return "/customer/withdraw";
     }
 
 
 
     @PostMapping("/transfer/{id}")
-    public String transfer(@ModelAttribute Transfer transfer, Model model){
+    public String transfer( @ModelAttribute Transfer transfer, Model model){
 
         transfer.setSender(customerService.findById(transfer.getSender().getId()));
         transfer.setReciptent(customerService.findById(transfer.getReciptent().getId()));
@@ -161,11 +178,16 @@ public class CustomerController {
 
             model.addAttribute("success",true);
             model.addAttribute("message", "Successful transfer transaction");
-        }else if(transfer.getTransactionAmount().compareTo(transfer.getSender().getBalance()) > 1){
+        }else
+            if(transfer.getTransactionAmount().compareTo(transfer.getSender().getBalance()) >= 1
+                || transfer.getTransferAmount().compareTo(BigDecimal.ZERO) <= 0
+                || transfer.getTransferAmount() == null){
             model.addAttribute("success",false);
             model.addAttribute("message", "Unsuccessful transfer transaction");
         }
 
+        model.addAttribute("transfer", new Transfer(customerService.findById(transfer.getSender().getId()),10L));
+        model.addAttribute("reciptent", customerService.findReciptent(transfer.getSender()));
         return "customer/transfer";
     }
 
